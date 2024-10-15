@@ -1,11 +1,13 @@
 import { db } from '../../lib/firebase';
-import { collection, getDocs, query, where } from 'firebase/firestore'; // Import required Firestore functions
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import Fuse from 'fuse.js'; // Import Fuse.js for searching
 
 export default async function handler(req, res) {
   const { page = 1, limit = 10, search = '', category = '', sort = 'asc' } = req.query;
 
   try {
-    let q = query(collection(db, 'products')); // Use query and collection
+    // Start with a base query
+    let q = query(collection(db, 'products'));
 
     // Filter by category if provided
     if (category) {
@@ -13,23 +15,21 @@ export default async function handler(req, res) {
     }
 
     // Get total products count for pagination
-    const totalSnapshot = await getDocs(q); // Use getDocs to retrieve documents
+    const totalSnapshot = await getDocs(q);
     const totalProducts = totalSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-    // Search functionality using Fuse.js
-    let products;
+    // If a search term is provided, filter products
+    let products = totalProducts;
     if (search) {
       const fuse = new Fuse(totalProducts, { keys: ['title'], includeScore: true });
       const results = fuse.search(search);
       products = results.map(result => result.item);
-    } else {
-      products = totalProducts;
     }
 
     // Sort products by price
-    const sortedProducts = sort === 'desc' 
-      ? products.sort((a, b) => b.price - a.price) 
-      : products.sort((a, b) => a.price - b.price);
+    const sortedProducts = products.sort((a, b) => 
+      sort === 'desc' ? b.price - a.price : a.price - b.price
+    );
 
     // Handle pagination
     const startIndex = (page - 1) * limit;
@@ -41,7 +41,7 @@ export default async function handler(req, res) {
       products: paginatedProducts,
       total: sortedProducts.length,
       page,
-      limit
+      limit,
     });
   } catch (error) {
     console.error('Error fetching products:', error);
