@@ -27,9 +27,11 @@ export default async function handler(req, res) {
     }
 
     // Sort products by price
-    const sortedProducts = products.sort((a, b) => 
-      sort === 'desc' ? b.price - a.price : a.price - b.price
-    );
+    const sortedProducts = products.sort((a, b) => {
+      if (sort === 'asc') return a.price - b.price;
+      if (sort === 'desc') return b.price - a.price;
+      return 0; // Default to ascending if sort parameter is not provided
+    });
 
     // Handle pagination
     const startIndex = (page - 1) * limit;
