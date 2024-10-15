@@ -1,4 +1,4 @@
-// scr/pages/_app.js
+// src/pages/_app.js
 import { AuthProvider } from '../context/AuthContext';
 import Head from 'next/head';
 import '../styles/styles.css';
@@ -14,6 +14,7 @@ function MyApp({ Component, pageProps }) {
         <meta name="keywords" content="your, default, keywords, here" />
         <meta name="robots" content="index, follow" />
         <link rel="icon" href="/favicon.ico" />
+        {/* You can add more meta tags here as needed */}
       </Head>
       <Component {...pageProps} />
     </AuthProvider>

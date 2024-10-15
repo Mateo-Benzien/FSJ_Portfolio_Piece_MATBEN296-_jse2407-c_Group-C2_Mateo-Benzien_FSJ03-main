@@ -3,7 +3,7 @@ const ReviewList = ({ reviews }) => {
     <div>
       {reviews.length > 0 ? (
         reviews.map((review) => (
-          <div key={review.id} className="review">
+          <div key={review.id || review._id} className="review">
             <p><strong>{review.reviewerName}</strong> ({new Date(review.date).toLocaleDateString()})</p>
             <p>Rating: {review.rating}/5</p>
             <p>{review.comment}</p>
