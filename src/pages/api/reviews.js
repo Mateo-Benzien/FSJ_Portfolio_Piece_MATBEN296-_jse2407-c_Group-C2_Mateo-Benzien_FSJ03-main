@@ -48,13 +48,19 @@ const reviewsHandler = async (req, res) => {
       const { id } = req.query;
       const { productId: deleteProductId } = req.body;
 
+      // Ensure the request is authenticated
+      if (!req.user) return res.status(401).json({ success: false, error: 'Unauthorized' });
+
       try {
         const reviewRef = db.collection('products').doc(deleteProductId).collection('reviews').doc(id);
         await reviewRef.delete();
 
-        return res.status(200).json({ message: 'Review deleted successfully' });
+        // Respond with a success message
+        return res.status(200).json({ success: true, message: 'Review deleted successfully' });
       } catch (error) {
-        return res.status(500).json({ error: error.message });
+        console.error('Error deleting review:', error);
+        // Respond with an error message
+        return res.status(500).json({ success: false, error: 'Failed to delete review' });
       }
 
     default:
