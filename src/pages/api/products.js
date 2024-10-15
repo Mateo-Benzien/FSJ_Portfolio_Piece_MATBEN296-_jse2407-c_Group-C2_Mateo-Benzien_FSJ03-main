@@ -9,11 +9,6 @@ export default async function handler(req, res) {
     // Start with a base query
     let q = query(collection(db, 'products'));
 
-    // Filter by category if provided
-    if (category) {
-      q = query(q, where('category', '==', category));
-    }
-
     // Get total products count for pagination
     const totalSnapshot = await getDocs(q);
     const totalProducts = totalSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -24,6 +19,11 @@ export default async function handler(req, res) {
       const fuse = new Fuse(totalProducts, { keys: ['title'], includeScore: true });
       const results = fuse.search(search);
       products = results.map(result => result.item);
+    }
+
+    // Filter by category if provided
+    if (category) {
+      products = products.filter(product => product.category === category);
     }
 
     // Sort products by price
@@ -42,6 +42,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       products: paginatedProducts,
       total: sortedProducts.length,
+      totalPages: Math.ceil(sortedProducts.length / limit),
       page,
       limit,
     });
