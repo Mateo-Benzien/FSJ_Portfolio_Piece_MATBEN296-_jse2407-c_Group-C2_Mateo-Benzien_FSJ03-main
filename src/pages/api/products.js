@@ -1,55 +1,48 @@
 // pages/api/products.js
-import { db } from '../../lib/firebaseConfig';
-import { collection, query, orderBy, limit, startAfter, getDocs } from 'firebase/firestore';
+import { db } from '../../firebase'; // Ensure to import your Firebase configuration
 import Fuse from 'fuse.js';
 
 export default async function handler(req, res) {
+  const { page = 1, limit = 10, search = '', category = '', sort = 'asc' } = req.query;
+
   try {
-    const { page = 1, limit = 10, lastVisibleId = null, search = '', category = '', sortBy = 'name', order = 'asc' } = req.query;
+    let query = db.collection('products');
 
-    const productCollection = collection(db, 'products');
-    let q;
-
-    if (lastVisibleId) {
-      const lastDocSnapshot = await getDocs(query(productCollection, orderBy('name'), limit(1), startAfter(lastVisibleId)));
-      q = query(productCollection, orderBy('name'), startAfter(lastDocSnapshot.docs[0]), limit(parseInt(limit)));
-    } else {
-      q = query(productCollection, orderBy('name'), limit(parseInt(limit)));
+    // Filter by category if provided
+    if (category) {
+      query = query.where('category', '==', category);
     }
 
-    const querySnapshot = await getDocs(q);
-    const products = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    // Get total products count for pagination
+    const totalSnapshot = await query.get();
+    const totalProducts = totalSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-    // Filtering by category
-    const filteredProducts = category ? products.filter(product => product.category === category) : products;
+    // Fetch products with pagination
+    const snapshot = await query.limit(limit).offset((page - 1) * limit).get();
+    const products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-    // Searching using Fuse.js
-    const fuse = new Fuse(filteredProducts, {
-      keys: ['title'],
-      threshold: 0.3, // Adjust based on your needs
-    });
-    const searchResults = search ? fuse.search(search).map(result => result.item) : filteredProducts;
+    // Search functionality using Fuse.js
+    if (search) {
+      const fuse = new Fuse(products, { keys: ['title'], includeScore: true });
+      const results = fuse.search(search);
+      return res.status(200).json({
+        products: results.map(result => result.item),
+        total: results.length // total for filtered results
+      });
+    }
 
-    // Sorting
-    const sortedProducts = searchResults.sort((a, b) => {
-      const priceA = a.price;
-      const priceB = b.price;
-      return order === 'asc' ? priceA - priceB : priceB - priceA;
-    });
+    // Sort products by price
+    const sortedProducts = sort === 'desc' 
+      ? products.sort((a, b) => b.price - a.price) 
+      : products.sort((a, b) => a.price - b.price);
 
-    // Get paginated results
-    const paginatedProducts = sortedProducts.slice((page - 1) * limit, page * limit);
-
-    // Get the last document for pagination
-    const lastVisible = paginatedProducts[paginatedProducts.length - 1];
-
-    res.status(200).json({
-      products: paginatedProducts,
-      lastVisibleId: lastVisible ? lastVisible.id : null,
-      nextPage: lastVisible ? parseInt(page) + 1 : null,
+    // Handle pagination and return response
+    return res.status(200).json({
+      products: sortedProducts,
+      total: totalProducts.length // total count for all products
     });
   } catch (error) {
     console.error('Error fetching products:', error);
-    res.status(500).json({ error: 'Failed to fetch products' });
+    return res.status(500).json({ error: 'Failed to fetch products' });
   }
 }

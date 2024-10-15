@@ -1,0 +1,18 @@
+[
+    {
+      "title": "Kitchen Utensil Set",
+      "price": 29.99,
+      "category": "kitchen-accessories"
+    },
+    {
+      "title": "Organic Olive Oil",
+      "price": 12.50,
+      "category": "groceries"
+    },
+    {
+      "title": "Yoga Mat",
+      "price": 25.00,
+      "category": "sports-accessories"
+    }
+  ]
+  

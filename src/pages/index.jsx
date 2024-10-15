@@ -67,13 +67,11 @@ export default function ProductListing({ initialProducts, initialCategories }) {
   };
 
   const handleNextPage = () => {
-    const nextPage = currentPage + 1;
-    setCurrentPage(nextPage);
+    setCurrentPage((prevPage) => prevPage + 1);
   };
 
   const handlePrevPage = () => {
-    const prevPage = Math.max(currentPage - 1, 1);
-    setCurrentPage(prevPage);
+    setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
   };
 
   const handleReset = () => {
@@ -103,23 +101,24 @@ export default function ProductListing({ initialProducts, initialCategories }) {
             className="search-input" 
           />
           <select value={selectedCategory} onChange={handleCategoryChange} className="category-select">
-          <option value="">All Categories</option>
-          <option value="kitchen-accessories">kitchen-accessories</option>
-          <option value="groceries">groceries</option>
-          <option value="sports-accessories">sports-accessories</option>
-          <option value="beauty">beauty</option>
-          <option value="skin-care">skin-care</option>
-          <option value="mobile-accessories">mobile-accessories</option>
-          <option value="home-decoration">home-decoration</option>
-          <option value="sunglasses">sunglasses</option>
-          <option value="womens-shoes">womens-shoes</option>
-          <option value="mens-shirts">mens-shirts</option>
-          <option value="tops">tops</option>
-          <option value="womens-jewellery">womens-jewellery</option>
-          <option value="womens-bags">womens-bags</option>
-          <option value="fragrances">fragrances</option>
-          <option value="smartphones">smartphones</option>
-          <option value="furniture">Furniture</option>
+            <option value="">All Categories</option>
+            {/* Hardcoded categories - consider fetching them dynamically */}
+            <option value="kitchen-accessories">Kitchen Accessories</option>
+            <option value="groceries">Groceries</option>
+            <option value="sports-accessories">Sports Accessories</option>
+            <option value="beauty">Beauty</option>
+            <option value="skin-care">Skin Care</option>
+            <option value="mobile-accessories">Mobile Accessories</option>
+            <option value="home-decoration">Home Decoration</option>
+            <option value="sunglasses">Sunglasses</option>
+            <option value="womens-shoes">Women's Shoes</option>
+            <option value="mens-shirts">Men's Shirts</option>
+            <option value="tops">Tops</option>
+            <option value="womens-jewellery">Women's Jewellery</option>
+            <option value="womens-bags">Women's Bags</option>
+            <option value="fragrances">Fragrances</option>
+            <option value="smartphones">Smartphones</option>
+            <option value="furniture">Furniture</option>
             {categories.map((category) => (
               <option key={category.id} value={category.name}>{category.name}</option>
             ))}
