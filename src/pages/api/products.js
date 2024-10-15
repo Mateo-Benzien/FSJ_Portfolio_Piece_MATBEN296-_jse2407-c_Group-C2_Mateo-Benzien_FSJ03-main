@@ -17,18 +17,14 @@ export default async function handler(req, res) {
     const totalSnapshot = await query.get();
     const totalProducts = totalSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-    // Fetch products with pagination
-    const snapshot = await query.limit(limit).offset((page - 1) * limit).get();
-    const products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
     // Search functionality using Fuse.js
+    let products;
     if (search) {
-      const fuse = new Fuse(products, { keys: ['title'], includeScore: true });
+      const fuse = new Fuse(totalProducts, { keys: ['title'], includeScore: true });
       const results = fuse.search(search);
-      return res.status(200).json({
-        products: results.map(result => result.item),
-        total: results.length // total for filtered results
-      });
+      products = results.map(result => result.item);
+    } else {
+      products = totalProducts;
     }
 
     // Sort products by price
@@ -36,13 +32,19 @@ export default async function handler(req, res) {
       ? products.sort((a, b) => b.price - a.price) 
       : products.sort((a, b) => a.price - b.price);
 
-    // Handle pagination and return response
+    // Handle pagination
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedProducts = sortedProducts.slice(startIndex, endIndex);
+
+    // Return response
     return res.status(200).json({
-      products: sortedProducts,
-      total: totalProducts.length // total count for all products
+      products: paginatedProducts,
+      total: sortedProducts.length,
+      page,
+      limit
     });
   } catch (error) {
-    console.error('Error fetching products:', error);
-    return res.status(500).json({ error: 'Failed to fetch products' });
+    return res.status(500).json({ message: 'Error fetching products', error });
   }
 }
