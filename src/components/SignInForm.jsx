@@ -7,17 +7,22 @@ const SignInForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { user } = useContext(AuthContext);
 
   const handleSignIn = async (e) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
     try {
       await signIn(email, password);
       setEmail('');
       setPassword('');
     } catch (err) {
       setError(err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -33,14 +38,21 @@ const SignInForm = () => {
         onChange={(e) => setEmail(e.target.value)}
         required
       />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-      />
-      <button type="submit">Sign In</button>
+      <div>
+        <input
+          type={showPassword ? 'text' : 'password'}
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <button type="button" onClick={() => setShowPassword(!showPassword)}>
+          {showPassword ? 'Hide' : 'Show'} Password
+        </button>
+      </div>
+      <button type="submit" disabled={isLoading}>
+        {isLoading ? 'Signing In...' : 'Sign In'}
+      </button>
       {error && <p>{error}</p>}
     </form>
   );
