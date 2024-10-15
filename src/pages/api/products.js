@@ -1,20 +1,19 @@
-// pages/api/products.js
-import { db } from '../../firebase'; // Ensure to import your Firebase configuration
-import Fuse from 'fuse.js';
+import { db } from '../../lib/firebase';
+import { collection, getDocs, query, where } from 'firebase/firestore'; // Import required Firestore functions
 
 export default async function handler(req, res) {
   const { page = 1, limit = 10, search = '', category = '', sort = 'asc' } = req.query;
 
   try {
-    let query = db.collection('products');
+    let q = query(collection(db, 'products')); // Use query and collection
 
     // Filter by category if provided
     if (category) {
-      query = query.where('category', '==', category);
+      q = query(q, where('category', '==', category));
     }
 
     // Get total products count for pagination
-    const totalSnapshot = await query.get();
+    const totalSnapshot = await getDocs(q); // Use getDocs to retrieve documents
     const totalProducts = totalSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
     // Search functionality using Fuse.js
@@ -45,6 +44,7 @@ export default async function handler(req, res) {
       limit
     });
   } catch (error) {
-    return res.status(500).json({ message: 'Error fetching products', error });
+    console.error('Error fetching products:', error);
+    return res.status(500).json({ message: 'Error fetching products', error: error.message || 'Unknown error' });
   }
 }

@@ -1,9 +1,9 @@
-// pages/api/categories.js
-import { db } from '../../firebase'; // Ensure to import your Firebase configuration
+import { db } from '../../lib/firebase';
+import { collection, getDocs } from 'firebase/firestore'; // Import required Firestore functions
 
 export default async function handler(req, res) {
   try {
-    const snapshot = await db.collection('categories').get();
+    const snapshot = await getDocs(collection(db, 'categories')); // Use getDocs and collection
     const categories = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
     return res.status(200).json(categories);
